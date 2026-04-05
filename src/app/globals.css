@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #050814;
+  color: #e0e0e0;
+  font-family: 'IBM Plex Mono', monospace;
+  overflow-x: hidden;
+  background-image: 
+    linear-gradient(0deg, rgba(26, 77, 102, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 77, 102, 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Cyber command aesthetic base */
+@layer components {
+  .cyber-glow {
+    @apply shadow-neon-cyan transition-all duration-300;
+  }
+
+  .cyber-border {
+    @apply border border-cyber-blue/30 transition-all duration-300;
+  }
+
+  .tech-label {
+    @apply text-xs font-mono uppercase tracking-wider text-cyber-blue/80;
+  }
+
+  .hud-text {
+    @apply font-mono text-cyber-neon drop-shadow-lg;
+  }
+
+  .panel {
+    @apply bg-cyber-dark/80 backdrop-blur-md border border-cyber-blue/20 rounded-sm;
+  }
+
+  .metric-display {
+    @apply flex flex-col items-center gap-2 p-4 panel;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a4d66;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00d9ff;
+}

@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules/
+/.pnp/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+/.next/
+/out/
+/dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Runtime
+.DS_Store
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
