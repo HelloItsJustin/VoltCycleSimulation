@@ -44,7 +44,7 @@ const components: ComponentSpec[] = [
       'Grid-synchronous discharge'
     ],
     angle: 0,
-    radius: 280,
+    radius: 240,
     color: '#00d9ff'
   },
   {
@@ -58,8 +58,8 @@ const components: ComponentSpec[] = [
       'LFP/NMC chemistry',
       '7S/5P module configuration'
     ],
-    angle: 60,
-    radius: 280,
+    angle: 72,
+    radius: 240,
     color: '#00d9ff'
   },
   {
@@ -73,8 +73,8 @@ const components: ComponentSpec[] = [
       'Automated contactors',
       'Emergency isolation system'
     ],
-    angle: 120,
-    radius: 280,
+    angle: 144,
+    radius: 240,
     color: '#ff0055'
   },
   {
@@ -88,8 +88,8 @@ const components: ComponentSpec[] = [
       'Fire-suppressant modules',
       'Thermal distribution network'
     ],
-    angle: 180,
-    radius: 280,
+    angle: 216,
+    radius: 240,
     color: '#00d9ff'
   },
   {
@@ -103,8 +103,8 @@ const components: ComponentSpec[] = [
       'Cloud integration',
       'Remote monitoring capability'
     ],
-    angle: 240,
-    radius: 280,
+    angle: 288,
+    radius: 240,
     color: '#00d9ff'
   }
 ]
@@ -132,6 +132,29 @@ export default function ReflowPackExplodedView() {
     return {
       x: centerX + pos.x,
       y: centerY + pos.y
+    }
+  }
+
+  // Get connection point from edge of brain box (brain is 128px = 64px from center)
+  const BRAIN_SIZE = 128
+  const BRAIN_RADIUS = BRAIN_SIZE / 2
+  
+  const getConnectionPoint = (angle: number, expand: boolean, canvasWidth: number, canvasHeight: number, fromBrain: boolean = true) => {
+    const centerX = canvasWidth / 2
+    const centerY = canvasHeight / 2
+    
+    if (!expand || !fromBrain) {
+      return { x: centerX, y: centerY }
+    }
+    
+    // Calculate the edge of the brain box
+    const radians = (angle * Math.PI) / 180
+    const edgeOffsetX = Math.cos(radians) * BRAIN_RADIUS
+    const edgeOffsetY = Math.sin(radians) * BRAIN_RADIUS
+    
+    return {
+      x: centerX + edgeOffsetX,
+      y: centerY + edgeOffsetY
     }
   }
 
@@ -195,21 +218,10 @@ export default function ReflowPackExplodedView() {
                     className="absolute inset-0 rounded-2xl border-2 border-purple-500/40 pointer-events-none"
                     animate={{
                       boxShadow: isExpanded
-                        ? '0 0 60px #8b5cf6, 0 0 120px #8b5cf6AA'
+                        ? '0 0 60px #8b5cf6, 0 0 120px #8b5cf688'
                         : '0 0 40px #8b5cf6, 0 0 80px #8b5cf6'
                     }}
                     transition={{ duration: 0.6 }}
-                  />
-
-                  {/* Rotating border */}
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl pointer-events-none"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                    style={{
-                      background: `conic-gradient(from 0deg, #8b5cf6, #00d9ff, transparent, transparent)`,
-                      opacity: 0.4
-                    } as React.CSSProperties}
                   />
 
                   {/* Main box */}
@@ -254,11 +266,11 @@ export default function ReflowPackExplodedView() {
                   </filter>
                 </defs>
 
-                {/* Connecting lines from brain to peripherals */}
+                {/* Connecting lines from brain edge to peripherals */}
                 <AnimatePresence>
                   {isExpanded && getPeripheralComponents().map((comp) => {
-                    const startPos = getComponentPixelPosition(0, 0, true, 800, 700) // Brain center
-                    const endPos = getComponentPixelPosition(comp.angle, comp.radius, true, 800, 700)
+                    const startPos = getConnectionPoint(comp.angle, true, 800, 700, true) // Brain EDGE
+                    const endPos = getComponentPixelPosition(comp.angle, comp.radius, true, 800, 700) // Component center
                     
                     return (
                       <line
@@ -309,7 +321,7 @@ export default function ReflowPackExplodedView() {
                         className="relative w-32 h-32 cursor-pointer"
                         whileTap={{ scale: 0.9 }}
                       >
-                        {/* Glow effect */}
+                        {/* Clean glow effect - simple box shadow */}
                         <motion.div
                           className="absolute inset-0 rounded-xl border-2"
                           animate={{
@@ -321,17 +333,6 @@ export default function ReflowPackExplodedView() {
                           transition={{ duration: 0.3 }}
                           style={{
                             background: `${comp.color}08`
-                          } as React.CSSProperties}
-                        />
-
-                        {/* Rotating ring */}
-                        <motion.div
-                          className="absolute inset-0 rounded-xl pointer-events-none"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                          style={{
-                            background: `conic-gradient(from 0deg, ${comp.color}, transparent, transparent)`,
-                            opacity: 0.3
                           } as React.CSSProperties}
                         />
 
