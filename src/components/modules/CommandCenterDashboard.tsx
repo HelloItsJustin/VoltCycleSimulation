@@ -4,33 +4,45 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 export default function CommandCenterDashboard() {
+  const MONTHLY_ENERGY_UNITS = 5000 // Monthly energy storage capacity/usage in units
+  
+  const calculateGridSpend = (rate: number) => {
+    return Math.round(rate * MONTHLY_ENERGY_UNITS)
+  }
+
+  const calculateSavings = (rate: number) => {
+    const voltcycleCost = 2.1 * MONTHLY_ENERGY_UNITS
+    const gridCost = rate * MONTHLY_ENERGY_UNITS
+    return Math.round(gridCost - voltcycleCost)
+  }
+
   const [metrics, setMetrics] = useState({
     soh: 78.4,
     rul: 5.4,
     regulatoryCerts: 1247,
     gridRate: 12,
-    monthlySavings: 45000,
+    monthlySavings: 49500, // (12 - 2.1) * 5000 = 49,500
     margin: 45.2
   })
 
   // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
-      setMetrics(prev => ({
-        ...prev,
-        soh: Math.min(100, prev.soh + (Math.random() - 0.45) * 0.5),
-        rul: prev.rul + (Math.random() - 0.5) * 0.05,
-        regulatoryCerts: prev.regulatoryCerts + Math.floor(Math.random() * 3),
-        gridRate: 12 + Math.sin(Date.now() / 10000) * 2,
-      }))
+      setMetrics(prev => {
+        const newGridRate = 12 + Math.sin(Date.now() / 10000) * 2
+        return {
+          ...prev,
+          soh: Math.min(100, prev.soh + (Math.random() - 0.45) * 0.5),
+          rul: prev.rul + (Math.random() - 0.5) * 0.05,
+          regulatoryCerts: prev.regulatoryCerts + Math.floor(Math.random() * 3),
+          gridRate: newGridRate,
+          monthlySavings: calculateSavings(newGridRate)
+        }
+      })
     }, 2000)
 
     return () => clearInterval(interval)
   }, [])
-
-  const calculateMonthly = (rate: number) => {
-    return Math.round((rate / 12) * 1000)
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -219,7 +231,7 @@ export default function CommandCenterDashboard() {
                         setMetrics(prev => ({
                           ...prev,
                           gridRate: newRate,
-                          monthlySavings: calculateMonthly(newRate) * 5
+                          monthlySavings: calculateSavings(newRate)
                         }))
                       }}
                       className="flex-1 h-1 bg-cyber-blue/30 rounded-lg appearance-none cursor-pointer accent-cyber-neon"
@@ -271,7 +283,7 @@ export default function CommandCenterDashboard() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs text-cyber-blue/60">Grid Spend</span>
                       <span className="text-xs font-mono text-danger-red">
-                        ₹{(metrics.gridRate * 1000).toLocaleString()}
+                        ₹{calculateGridSpend(metrics.gridRate).toLocaleString()}
                       </span>
                     </div>
                     <div className="w-full bg-cyber-dark/50 h-1 rounded border border-danger-red/30">
