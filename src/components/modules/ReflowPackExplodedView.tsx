@@ -165,6 +165,82 @@ export default function ReflowPackExplodedView() {
                 backgroundImage: `radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)`
               }} />
 
+              {/* Central Brain (BMS) - Render first for proper layering */}
+              <motion.div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30"
+                animate={{
+                  scale: isExpanded ? 1.1 : [1, 1.03, 1]
+                }}
+                transition={{
+                  scale: isExpanded
+                    ? { duration: 0.6, ease: 'easeOut' }
+                    : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                }}
+              >
+                <motion.button
+                  onClick={() => {
+                    setIsExpanded(!isExpanded)
+                    setSelectedComponent('bms')
+                  }}
+                  onMouseEnter={() => setHoveredComponent('bms')}
+                  onMouseLeave={() => setHoveredComponent(null)}
+                  className="relative w-32 h-32 cursor-pointer hover:outline-none focus:outline-none"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  style={{ pointerEvents: 'auto' } as React.CSSProperties}
+                >
+                  {/* Outer glow ring */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl border-2 border-purple-500/40 pointer-events-none"
+                    animate={{
+                      boxShadow: isExpanded
+                        ? '0 0 60px #8b5cf6, 0 0 120px #8b5cf6AA'
+                        : '0 0 40px #8b5cf6, 0 0 80px #8b5cf6'
+                    }}
+                    transition={{ duration: 0.6 }}
+                  />
+
+                  {/* Rotating border */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl border-2 border-transparent pointer-events-none"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      borderImage: 'linear-gradient(45deg, #8b5cf6, #00d9ff, #8b5cf6) 1'
+                    } as React.CSSProperties}
+                  />
+
+                  {/* Main box */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 to-purple-800/40 rounded-2xl border-2 border-purple-500/60 flex flex-col items-center justify-center overflow-hidden pointer-events-none">
+                    {/* Internal glow lines */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-1/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+                      <div className="absolute top-2/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+                    </div>
+
+                    <div className="relative z-10 text-center">
+                      <div className="text-3xl font-mono font-bold text-cyber-neon mb-1 tracking-wide">
+                        BRAIN
+                      </div>
+                      <div className="text-xs text-purple-300/70 font-mono tracking-widest uppercase">
+                        Control Hub
+                      </div>
+                    </div>
+
+                    {/* Center pulse */}
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl border-2 border-cyber-neon/30"
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        opacity: [0.5, 0.8, 0.5]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </div>
+                </motion.button>
+              </motion.div>
+
               {/* SVG Connecting Lines */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none">
                 <defs>
@@ -199,80 +275,6 @@ export default function ReflowPackExplodedView() {
                   })}
                 </AnimatePresence>
               </svg>
-
-              {/* Central Brain (BMS) */}
-              <motion.div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                animate={{
-                  scale: isExpanded ? 1.1 : [1, 1.03, 1]
-                }}
-                transition={{
-                  scale: isExpanded
-                    ? { duration: 0.6, ease: 'easeOut' }
-                    : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
-                }}
-              >
-                <motion.button
-                  onClick={() => {
-                    setIsExpanded(!isExpanded)
-                    setSelectedComponent('bms')
-                  }}
-                  onMouseEnter={() => setHoveredComponent('bms')}
-                  onMouseLeave={() => setHoveredComponent(null)}
-                  className="relative w-32 h-32 cursor-pointer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {/* Outer glow ring */}
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl border-2 border-purple-500/40"
-                    animate={{
-                      boxShadow: isExpanded
-                        ? '0 0 60px #8b5cf6, 0 0 120px #8b5cf6AA'
-                        : '0 0 40px #8b5cf6, 0 0 80px #8b5cf6'
-                    }}
-                    transition={{ duration: 0.6 }}
-                  />
-
-                  {/* Rotating border */}
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl border-2 border-transparent"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                    style={{
-                      borderImage: 'linear-gradient(45deg, #8b5cf6, #00d9ff, #8b5cf6) 1'
-                    } as React.CSSProperties}
-                  />
-
-                  {/* Main box */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 to-purple-800/40 rounded-2xl border-2 border-purple-500/60 flex flex-col items-center justify-center overflow-hidden">
-                    {/* Internal glow lines */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute top-1/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-                      <div className="absolute top-2/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-                    </div>
-
-                    <div className="relative z-10 text-center">
-                      <div className="text-3xl font-mono font-bold text-cyber-neon mb-1 tracking-wide">
-                        BRAIN
-                      </div>
-                      <div className="text-xs text-purple-300/70 font-mono tracking-widest uppercase">
-                        Control Hub
-                      </div>
-                    </div>
-
-                    {/* Center pulse */}
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl border-2 border-cyber-neon/30"
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        opacity: [0.5, 0.8, 0.5]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </div>
-                </motion.button>
-              </motion.div>
 
               {/* Peripheral Components */}
               <AnimatePresence>
