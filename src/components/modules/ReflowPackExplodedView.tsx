@@ -133,14 +133,14 @@ export default function ReflowPackExplodedView() {
   }, [])
 
   // Calculate optimal radius to fill entire container
-  const COMPONENT_SIZE = 128
-  const COMPONENT_HALF = COMPONENT_SIZE / 2  // 64px - distance from component center to edge
-  const EDGE_PADDING = 10  // minimum padding from container edge
+  const COMPONENT_SIZE = 140  // Increased from 128 for better use of space
+  const COMPONENT_HALF = COMPONENT_SIZE / 2  
+  const EDGE_PADDING = 8  // Reduced for more aggressive space usage
   
-  // Radius is from center to component edge, accounting for component half-size
+  // Radius calculation for maximum utilization
   const optimalRadius = Math.min(
-    (containerDims.width / 2) - COMPONENT_HALF - EDGE_PADDING,   // width: half container minus component half
-    (containerDims.height / 2) - COMPONENT_HALF - EDGE_PADDING    // height: half container minus component half
+    (containerDims.width / 2) - COMPONENT_HALF - EDGE_PADDING,
+    (containerDims.height / 2) - COMPONENT_HALF - EDGE_PADDING
   )
 
   const getPeripheralComponents = () => components.filter(c => c.id !== 'bms')
@@ -167,15 +167,24 @@ export default function ReflowPackExplodedView() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="space-y-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-mono font-bold text-cyber-neon mb-2">
+        {/* Premium Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <motion.h2 
+            className="text-5xl font-mono font-bold text-cyber-neon mb-3"
+            animate={{ textShadow: ['0 0 20px rgba(0, 217, 255, 0.3)', '0 0 40px rgba(0, 217, 255, 0.8)', '0 0 20px rgba(0, 217, 255, 0.3)'] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
             HARDWARE ARCHITECTURE
-          </h2>
-          <p className="text-cyber-blue/70 text-sm">
+          </motion.h2>
+          <p className="text-cyber-blue/70 text-sm tracking-wider">
             {isExpanded ? 'Reflow-Pack Dissected | Click Components to Explore' : 'Click Central Hub to Dissect Architecture'}
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-3 gap-8">
           {/* Main Visualization */}
@@ -213,9 +222,9 @@ export default function ReflowPackExplodedView() {
                   }}
                   onMouseEnter={() => setHoveredComponent('bms')}
                   onMouseLeave={() => setHoveredComponent(null)}
-                  className="relative w-32 h-32 cursor-pointer hover:outline-none focus:outline-none"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="relative w-40 h-40 cursor-pointer hover:outline-none focus:outline-none"
+                  whileHover={{ scale: 1.12 }}
+                  whileTap={{ scale: 0.92 }}
                   type="button"
                   style={{ pointerEvents: 'auto' } as React.CSSProperties}
                 >
@@ -238,15 +247,19 @@ export default function ReflowPackExplodedView() {
                       <div className="absolute top-2/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
                     </div>
 
-                    <div className="relative z-10 text-center">
-                      <div className="text-2xl font-mono font-bold text-cyber-neon tracking-wide">
+                    <div className="relative z-10 text-center flex flex-col items-center justify-center h-full">
+                      <motion.div 
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-2xl font-mono font-bold text-cyber-neon tracking-wide mb-2"
+                      >
                         {isExpanded ? 'BRAIN' : 'REFLOW'}
-                      </div>
+                      </motion.div>
                       <div className="text-xs text-cyber-neon/60 font-mono tracking-widest uppercase">
                         {isExpanded ? 'Control Hub' : 'PACKET'}
                       </div>
                       {!isExpanded && (
-                        <div className="text-xxxs text-purple-300/40 font-mono tracking-wider mt-1">
+                        <div className="text-xxxs text-purple-300/40 font-mono tracking-wider mt-2">
                           v3.0
                         </div>
                       )}

@@ -27,15 +27,24 @@ export default function LifecycleCinema() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="space-y-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-mono font-bold text-cyber-neon mb-2">
+        {/* Premium Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <motion.h2 
+            className="text-5xl font-mono font-bold text-cyber-neon mb-3"
+            animate={{ textShadow: ['0 0 20px rgba(0, 217, 255, 0.3)', '0 0 40px rgba(0, 217, 255, 0.8)', '0 0 20px rgba(0, 217, 255, 0.3)'] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
             LIFECYCLE CINEMA
-          </h2>
-          <p className="text-cyber-blue/70 text-sm">
-            Battery Recycling & Reflow Assembly Process
+          </motion.h2>
+          <p className="text-cyber-blue/70 text-sm tracking-wider">
+            Five-Stage Battery Recycling & Reflow Assembly Process
           </p>
-        </div>
+        </motion.div>
 
         {/* Main Animation Canvas */}
         <div className="relative w-full h-[700px] bg-gradient-to-br from-cyber-dark/50 to-cyber-darker border-2 border-cyber-blue/30 rounded-xl overflow-hidden">
