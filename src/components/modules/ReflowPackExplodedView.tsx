@@ -44,7 +44,7 @@ const components: ComponentSpec[] = [
       'Grid-synchronous discharge'
     ],
     angle: 0,
-    radius: 200,
+    radius: 280,
     color: '#00d9ff'
   },
   {
@@ -59,7 +59,7 @@ const components: ComponentSpec[] = [
       '7S/5P module configuration'
     ],
     angle: 60,
-    radius: 200,
+    radius: 280,
     color: '#00d9ff'
   },
   {
@@ -74,7 +74,7 @@ const components: ComponentSpec[] = [
       'Emergency isolation system'
     ],
     angle: 120,
-    radius: 200,
+    radius: 280,
     color: '#ff0055'
   },
   {
@@ -89,7 +89,7 @@ const components: ComponentSpec[] = [
       'Thermal distribution network'
     ],
     angle: 180,
-    radius: 200,
+    radius: 280,
     color: '#00d9ff'
   },
   {
@@ -104,7 +104,7 @@ const components: ComponentSpec[] = [
       'Remote monitoring capability'
     ],
     angle: 240,
-    radius: 200,
+    radius: 280,
     color: '#00d9ff'
   }
 ]
@@ -123,6 +123,16 @@ export default function ReflowPackExplodedView() {
     const x = Math.cos(radians) * actualRadius
     const y = Math.sin(radians) * actualRadius
     return { x, y }
+  }
+
+  const getComponentPixelPosition = (angle: number, radius: number, expand: boolean, canvasWidth: number, canvasHeight: number) => {
+    const pos = calculatePosition(angle, radius, expand)
+    const centerX = canvasWidth / 2
+    const centerY = canvasHeight / 2
+    return {
+      x: centerX + pos.x,
+      y: centerY + pos.y
+    }
   }
 
   return (
@@ -170,29 +180,20 @@ export default function ReflowPackExplodedView() {
                 {/* Connecting lines from brain to peripherals */}
                 <AnimatePresence>
                   {isExpanded && getPeripheralComponents().map((comp) => {
-                    const pos = calculatePosition(comp.angle, comp.radius, true)
-                    const centerX = 50
-                    const centerY = 50
-                    const startX = centerX + '%'
-                    const startY = centerY + '%'
-                    const endX = centerX + (pos.x / 400) * 50 + '%'
-                    const endY = centerY + (pos.y / 400) * 50 + '%'
-
+                    const startPos = getComponentPixelPosition(0, 0, true, 800, 700) // Brain center
+                    const endPos = getComponentPixelPosition(comp.angle, comp.radius, true, 800, 700)
+                    
                     return (
-                      <motion.line
+                      <line
                         key={`line-${comp.id}`}
-                        x1={startX}
-                        y1={startY}
-                        x2={endX}
-                        y2={endY}
+                        x1={startPos.x}
+                        y1={startPos.y}
+                        x2={endPos.x}
+                        y2={endPos.y}
                         stroke={hoveredComponent === comp.id ? comp.color : '#1a7a8a'}
                         strokeWidth={hoveredComponent === comp.id ? '2' : '1'}
                         opacity={hoveredComponent === comp.id ? 0.8 : 0.3}
                         filter="url(#glow)"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        exit={{ pathLength: 0 }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
                       />
                     )
                   })}
@@ -278,16 +279,19 @@ export default function ReflowPackExplodedView() {
                 {getPeripheralComponents().map((comp) => {
                   const isSelected = selectedComponent === comp.id
                   const isHovered = hoveredComponent === comp.id
-                  const pos = calculatePosition(comp.angle, comp.radius, isExpanded)
+                  const pixelPos = getComponentPixelPosition(comp.angle, comp.radius, isExpanded, 800, 700)
 
                   return (
                     <motion.div
                       key={comp.id}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                      className="absolute"
+                      style={{
+                        left: pixelPos.x,
+                        top: pixelPos.y,
+                        transform: 'translate(-50%, -50%)'
+                      } as React.CSSProperties}
                       animate={{
-                        x: pos.x,
-                        y: pos.y,
-                        scale: isSelected ? 1.2 : isHovered ? 1.1 : 1,
+                        scale: isSelected ? 1.25 : isHovered ? 1.15 : 1,
                         opacity: isExpanded ? 1 : 0
                       }}
                       transition={{
@@ -299,7 +303,7 @@ export default function ReflowPackExplodedView() {
                         onClick={() => setSelectedComponent(comp.id)}
                         onMouseEnter={() => setHoveredComponent(comp.id)}
                         onMouseLeave={() => setHoveredComponent(null)}
-                        className="relative w-24 h-24 cursor-pointer"
+                        className="relative w-32 h-32 cursor-pointer"
                         whileTap={{ scale: 0.9 }}
                       >
                         {/* Glow effect */}
@@ -307,8 +311,8 @@ export default function ReflowPackExplodedView() {
                           className="absolute inset-0 rounded-xl border-2"
                           animate={{
                             boxShadow: isSelected || isHovered
-                              ? `0 0 40px ${comp.color}, 0 0 80px ${comp.color}88`
-                              : `0 0 20px ${comp.color}40`,
+                              ? `0 0 50px ${comp.color}, 0 0 100px ${comp.color}88`
+                              : `0 0 25px ${comp.color}40`,
                             borderColor: isSelected || isHovered ? comp.color : `${comp.color}60`
                           }}
                           transition={{ duration: 0.3 }}
@@ -331,7 +335,7 @@ export default function ReflowPackExplodedView() {
                         <div className="absolute inset-0 rounded-xl flex items-center justify-center">
                           <div className="text-center z-10">
                             <div
-                              className="text-xs font-mono font-bold uppercase tracking-widest"
+                              className="text-sm font-mono font-bold uppercase tracking-widest"
                               style={{ color: comp.color }}
                             >
                               {comp.label.split(' ')[0]}
