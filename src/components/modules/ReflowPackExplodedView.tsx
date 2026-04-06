@@ -144,7 +144,7 @@ export default function ReflowPackExplodedView() {
             HARDWARE ARCHITECTURE
           </h2>
           <p className="text-cyber-blue/70 text-sm">
-            {isExpanded ? 'Reflow-Pack Dissected | Click Components to Explore' : 'Reflow-Pack System | Click to Dissect'}
+            {isExpanded ? 'Reflow-Pack Dissected | Click Components to Explore' : 'Click Central Hub to Dissect Architecture'}
           </p>
         </div>
 
@@ -203,11 +203,12 @@ export default function ReflowPackExplodedView() {
 
                   {/* Rotating border */}
                   <motion.div
-                    className="absolute inset-0 rounded-2xl border-2 border-transparent pointer-events-none"
+                    className="absolute inset-0 rounded-2xl pointer-events-none"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                     style={{
-                      borderImage: 'linear-gradient(45deg, #8b5cf6, #00d9ff, #8b5cf6) 1'
+                      background: `conic-gradient(from 0deg, #8b5cf6, #00d9ff, transparent, transparent)`,
+                      opacity: 0.4
                     } as React.CSSProperties}
                   />
 
@@ -221,10 +222,10 @@ export default function ReflowPackExplodedView() {
 
                     <div className="relative z-10 text-center">
                       <div className="text-3xl font-mono font-bold text-cyber-neon mb-1 tracking-wide">
-                        BRAIN
+                        {isExpanded ? 'BRAIN' : 'REFLOW-PACK'}
                       </div>
                       <div className="text-xs text-purple-300/70 font-mono tracking-widest uppercase">
-                        Control Hub
+                        {isExpanded ? 'Control Hub' : 'v3.0 System'}
                       </div>
                     </div>
 
@@ -266,9 +267,9 @@ export default function ReflowPackExplodedView() {
                         y1={startPos.y}
                         x2={endPos.x}
                         y2={endPos.y}
-                        stroke={hoveredComponent === comp.id ? comp.color : '#1a7a8a'}
-                        strokeWidth={hoveredComponent === comp.id ? '2' : '1'}
-                        opacity={hoveredComponent === comp.id ? 0.8 : 0.3}
+                        stroke={hoveredComponent === comp.id ? comp.color : '#0f7f99'}
+                        strokeWidth={hoveredComponent === comp.id ? '2.5' : '1.5'}
+                        opacity={hoveredComponent === comp.id ? 1 : 0.5}
                         filter="url(#glow)"
                       />
                     )
@@ -325,11 +326,12 @@ export default function ReflowPackExplodedView() {
 
                         {/* Rotating ring */}
                         <motion.div
-                          className="absolute inset-0 rounded-xl border border-transparent"
+                          className="absolute inset-0 rounded-xl pointer-events-none"
                           animate={{ rotate: 360 }}
                           transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
                           style={{
-                            borderImage: `linear-gradient(45deg, ${comp.color}, transparent, ${comp.color}) 1`
+                            background: `conic-gradient(from 0deg, ${comp.color}, transparent, transparent)`,
+                            opacity: 0.3
                           } as React.CSSProperties}
                         />
 
