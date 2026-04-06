@@ -132,40 +132,19 @@ export default function ReflowPackExplodedView() {
     return () => window.removeEventListener('resize', updateDimensions)
   }, [])
 
-  // Calculate optimal radius based on container dimensions
+  // Calculate optimal radius to fill entire container
   const COMPONENT_SIZE = 128
-  const COMPONENT_HALF = COMPONENT_SIZE / 2
-  const BRAIN_SIZE = 128
-  const BRAIN_RADIUS = BRAIN_SIZE / 2
+  const COMPONENT_HALF = COMPONENT_SIZE / 2  // 64px - distance from component center to edge
+  const EDGE_PADDING = 10  // minimum padding from container edge
   
+  // Radius is from center to component edge, accounting for component half-size
   const optimalRadius = Math.min(
-    (containerDims.width / 2) - BRAIN_RADIUS - COMPONENT_HALF - 20,  // width constraint with padding
-    (containerDims.height / 2) - BRAIN_RADIUS - COMPONENT_HALF - 20   // height constraint with padding
+    (containerDims.width / 2) - COMPONENT_HALF - EDGE_PADDING,   // width: half container minus component half
+    (containerDims.height / 2) - COMPONENT_HALF - EDGE_PADDING    // height: half container minus component half
   )
 
   const getPeripheralComponents = () => components.filter(c => c.id !== 'bms')
   const selectedComponentData = components.find(c => c.id === selectedComponent)
-
-  // Get connection point from edge of brain box (brain is 128px = 64px from center)
-  
-  const getConnectionPoint = (angle: number, expand: boolean, fromBrain: boolean = true) => {
-    const centerX = containerDims.width / 2
-    const centerY = containerDims.height / 2
-    
-    if (!expand || !fromBrain) {
-      return { x: centerX, y: centerY }
-    }
-    
-    // Calculate the edge of the brain box
-    const radians = (angle * Math.PI) / 180
-    const edgeOffsetX = Math.cos(radians) * BRAIN_RADIUS
-    const edgeOffsetY = Math.sin(radians) * BRAIN_RADIUS
-    
-    return {
-      x: centerX + edgeOffsetX,
-      y: centerY + edgeOffsetY
-    }
-  }
 
   const calculatePosition = (angle: number, radius: number, expand: boolean) => {
     const actualRadius = expand ? radius : 0
@@ -260,12 +239,17 @@ export default function ReflowPackExplodedView() {
                     </div>
 
                     <div className="relative z-10 text-center">
-                      <div className="text-3xl font-mono font-bold text-cyber-neon mb-1 tracking-wide">
-                        {isExpanded ? 'BRAIN' : 'REFLOW-PACK'}
+                      <div className="text-2xl font-mono font-bold text-cyber-neon tracking-wide">
+                        {isExpanded ? 'BRAIN' : 'REFLOW'}
                       </div>
-                      <div className="text-xs text-purple-300/70 font-mono tracking-widest uppercase">
-                        {isExpanded ? 'Control Hub' : 'v3.0 System'}
+                      <div className="text-xs text-cyber-neon/60 font-mono tracking-widest uppercase">
+                        {isExpanded ? 'Control Hub' : 'PACKET'}
                       </div>
+                      {!isExpanded && (
+                        <div className="text-xxxs text-purple-300/40 font-mono tracking-wider mt-1">
+                          v3.0
+                        </div>
+                      )}
                     </div>
 
                     {/* Center pulse */}
@@ -281,40 +265,7 @@ export default function ReflowPackExplodedView() {
                 </motion.button>
               </motion.div>
 
-              {/* SVG Connecting Lines */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                <defs>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
 
-                {/* Connecting lines from brain edge to peripherals */}
-                <AnimatePresence>
-                  {isExpanded && getPeripheralComponents().map((comp) => {
-                    const startPos = getConnectionPoint(comp.angle, true, true) // Brain EDGE
-                    const endPos = getComponentPixelPosition(comp.angle, optimalRadius, true) // Component center
-                    
-                    return (
-                      <line
-                        key={`line-${comp.id}`}
-                        x1={startPos.x}
-                        y1={startPos.y}
-                        x2={endPos.x}
-                        y2={endPos.y}
-                        stroke={hoveredComponent === comp.id ? comp.color : '#0f7f99'}
-                        strokeWidth={hoveredComponent === comp.id ? '2.5' : '1.5'}
-                        opacity={hoveredComponent === comp.id ? 1 : 0.5}
-                        filter="url(#glow)"
-                      />
-                    )
-                  })}
-                </AnimatePresence>
-              </svg>
 
               {/* Peripheral Components */}
               <AnimatePresence>
