@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type HardwareComponent = 'bms' | 'pcs' | 'cells' | 'hv' | 'thermal' | 'iot'
 
@@ -11,7 +11,8 @@ interface ComponentSpec {
   label: string
   description: string
   specs: string[]
-  position: { top: string; left: string }
+  angle: number
+  radius: number
   color: string
 }
 
@@ -27,7 +28,8 @@ const components: ComponentSpec[] = [
       'Thermal runaway prevention',
       'Real-time voltage equalization'
     ],
-    position: { top: '15%', left: '15%' },
+    angle: 0,
+    radius: 0,
     color: '#8b5cf6'
   },
   {
@@ -41,7 +43,8 @@ const components: ComponentSpec[] = [
       'Hybrid inverter topology',
       'Grid-synchronous discharge'
     ],
-    position: { top: '15%', left: '85%' },
+    angle: 0,
+    radius: 200,
     color: '#00d9ff'
   },
   {
@@ -55,7 +58,8 @@ const components: ComponentSpec[] = [
       'LFP/NMC chemistry',
       '7S/5P module configuration'
     ],
-    position: { top: '50%', left: '20%' },
+    angle: 60,
+    radius: 200,
     color: '#00d9ff'
   },
   {
@@ -69,7 +73,8 @@ const components: ComponentSpec[] = [
       'Automated contactors',
       'Emergency isolation system'
     ],
-    position: { top: '50%', left: '80%' },
+    angle: 120,
+    radius: 200,
     color: '#ff0055'
   },
   {
@@ -83,7 +88,8 @@ const components: ComponentSpec[] = [
       'Fire-suppressant modules',
       'Thermal distribution network'
     ],
-    position: { top: '80%', left: '20%' },
+    angle: 180,
+    radius: 200,
     color: '#00d9ff'
   },
   {
@@ -97,16 +103,27 @@ const components: ComponentSpec[] = [
       'Cloud integration',
       'Remote monitoring capability'
     ],
-    position: { top: '80%', left: '80%' },
+    angle: 240,
+    radius: 200,
     color: '#00d9ff'
   }
 ]
 
 export default function ReflowPackExplodedView() {
+  const [isExpanded, setIsExpanded] = useState(false)
   const [selectedComponent, setSelectedComponent] = useState<HardwareComponent>('bms')
   const [hoveredComponent, setHoveredComponent] = useState<HardwareComponent | null>(null)
 
+  const getPeripheralComponents = () => components.filter(c => c.id !== 'bms')
   const selectedComponentData = components.find(c => c.id === selectedComponent)
+
+  const calculatePosition = (angle: number, radius: number, expand: boolean) => {
+    const actualRadius = expand ? radius : 0
+    const radians = (angle * Math.PI) / 180
+    const x = Math.cos(radians) * actualRadius
+    const y = Math.sin(radians) * actualRadius
+    return { x, y }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
@@ -117,151 +134,215 @@ export default function ReflowPackExplodedView() {
             HARDWARE ARCHITECTURE
           </h2>
           <p className="text-cyber-blue/70 text-sm">
-            Reflow-Pack System | 6-Component Integrated Assembly
+            {isExpanded ? 'Reflow-Pack Dissected | Click Components to Explore' : 'Reflow-Pack System | Click to Dissect'}
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-8">
           {/* Main Visualization */}
           <div className="col-span-2">
-            <div className="relative w-full h-[650px] bg-gradient-to-br from-cyber-dark/70 to-cyber-darker border border-cyber-blue/30 rounded-lg overflow-hidden">
-              {/* Subtle grid background */}
-              <div className="absolute inset-0 opacity-[0.03]">
+            <div className="relative w-full h-[700px] bg-gradient-to-br from-cyber-dark/70 to-cyber-darker border border-cyber-blue/20 rounded-lg overflow-hidden">
+              {/* Animated grid background */}
+              <div className="absolute inset-0 opacity-[0.02]">
                 <div className="w-full h-full" style={{
                   backgroundImage: 'linear-gradient(0deg, #00d9ff 1px, transparent 1px), linear-gradient(90deg, #00d9ff 1px, transparent 1px)',
                   backgroundSize: '50px 50px'
                 }} />
               </div>
 
-              {/* Center Chassis - 3D Box */}
+              {/* Radial gradient */}
+              <div className="absolute inset-0 bg-radial-gradient" style={{
+                backgroundImage: `radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)`
+              }} />
+
+              {/* SVG Connecting Lines */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Connecting lines from brain to peripherals */}
+                <AnimatePresence>
+                  {isExpanded && getPeripheralComponents().map((comp) => {
+                    const pos = calculatePosition(comp.angle, comp.radius, true)
+                    const centerX = 50
+                    const centerY = 50
+                    const startX = centerX + '%'
+                    const startY = centerY + '%'
+                    const endX = centerX + (pos.x / 400) * 50 + '%'
+                    const endY = centerY + (pos.y / 400) * 50 + '%'
+
+                    return (
+                      <motion.line
+                        key={`line-${comp.id}`}
+                        x1={startX}
+                        y1={startY}
+                        x2={endX}
+                        y2={endY}
+                        stroke={hoveredComponent === comp.id ? comp.color : '#1a7a8a'}
+                        strokeWidth={hoveredComponent === comp.id ? '2' : '1'}
+                        opacity={hoveredComponent === comp.id ? 0.8 : 0.3}
+                        filter="url(#glow)"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        exit={{ pathLength: 0 }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                      />
+                    )
+                  })}
+                </AnimatePresence>
+              </svg>
+
+              {/* Central Brain (BMS) */}
               <motion.div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                 animate={{
-                  scale: hoveredComponent ? 0.95 : [1, 1.02, 1]
+                  scale: isExpanded ? 1.1 : [1, 1.03, 1]
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-56"
+                transition={{
+                  scale: isExpanded
+                    ? { duration: 0.6, ease: 'easeOut' }
+                    : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+                }}
               >
-                {/* 3D Perspective Box */}
-                <div className="relative w-full h-full" style={{
-                  transformStyle: 'preserve-3d',
-                  perspective: '1000px'
-                }}>
+                <motion.button
+                  onClick={() => {
+                    setIsExpanded(!isExpanded)
+                    setSelectedComponent('bms')
+                  }}
+                  onMouseEnter={() => setHoveredComponent('bms')}
+                  onMouseLeave={() => setHoveredComponent(null)}
+                  className="relative w-32 h-32 cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {/* Outer glow ring */}
                   <motion.div
-                    animate={{ rotateX: [5, -5, 5], rotateY: [10, -10, 10] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="w-full h-full bg-gradient-to-br from-cyber-indigo/40 to-cyber-blue/30 border-2 border-cyber-blue/60 rounded-lg flex flex-col items-center justify-center shadow-2xl"
+                    className="absolute inset-0 rounded-2xl border-2 border-purple-500/40"
+                    animate={{
+                      boxShadow: isExpanded
+                        ? '0 0 60px #8b5cf6, 0 0 120px #8b5cf6AA'
+                        : '0 0 40px #8b5cf6, 0 0 80px #8b5cf6'
+                    }}
+                    transition={{ duration: 0.6 }}
+                  />
+
+                  {/* Rotating border */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl border-2 border-transparent"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                     style={{
-                      boxShadow: 'inset 0 0 40px rgba(0, 217, 255, 0.2), 0 20px 60px rgba(139, 92, 246, 0.3)'
+                      borderImage: 'linear-gradient(45deg, #8b5cf6, #00d9ff, #8b5cf6) 1'
                     } as React.CSSProperties}
-                  >
-                    {/* Internal structure lines */}
-                    <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
-                      <div className="absolute top-1/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-blue/40 to-transparent" />
-                      <div className="absolute top-2/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-blue/40 to-transparent" />
-                      <div className="absolute left-1/3 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyber-blue/40 to-transparent" />
-                      <div className="absolute left-2/3 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyber-blue/40 to-transparent" />
+                  />
+
+                  {/* Main box */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 to-purple-800/40 rounded-2xl border-2 border-purple-500/60 flex flex-col items-center justify-center overflow-hidden">
+                    {/* Internal glow lines */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-1/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
+                      <div className="absolute top-2/3 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
                     </div>
 
-                    <div className="text-center z-10">
-                      <div className="text-4xl font-mono font-bold text-cyber-neon mb-2">
-                        REFLOW-PACK
+                    <div className="relative z-10 text-center">
+                      <div className="text-3xl font-mono font-bold text-cyber-neon mb-1 tracking-wide">
+                        BRAIN
                       </div>
-                      <div className="text-xs text-cyber-blue/60 font-mono">v3.0 Architecture</div>
+                      <div className="text-xs text-purple-300/70 font-mono tracking-widest uppercase">
+                        Control Hub
+                      </div>
                     </div>
-                  </motion.div>
-                </div>
+
+                    {/* Center pulse */}
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl border-2 border-cyber-neon/30"
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        opacity: [0.5, 0.8, 0.5]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </div>
+                </motion.button>
               </motion.div>
 
-              {/* Component Nodes */}
-              {components.map((comp) => {
-                const isSelected = selectedComponent === comp.id
-                const isHovered = hoveredComponent === comp.id
+              {/* Peripheral Components */}
+              <AnimatePresence>
+                {getPeripheralComponents().map((comp) => {
+                  const isSelected = selectedComponent === comp.id
+                  const isHovered = hoveredComponent === comp.id
+                  const pos = calculatePosition(comp.angle, comp.radius, isExpanded)
 
-                return (
-                  <motion.div
-                    key={comp.id}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                    style={{
-                      top: comp.position.top,
-                      left: comp.position.left
-                    } as React.CSSProperties}
-                    onMouseEnter={() => setHoveredComponent(comp.id)}
-                    onMouseLeave={() => setHoveredComponent(null)}
-                    onClick={() => setSelectedComponent(comp.id)}
-                    animate={{
-                      scale: isSelected ? 1.3 : isHovered ? 1.2 : 1
-                    }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {/* Connecting line to center */}
-                    <svg
-                      className="absolute inset-0 w-96 h-96 pointer-events-none"
-                      style={{
-                        top: '-192px',
-                        left: '-192px'
-                      }}
-                    >
-                      <motion.line
-                        x1="192"
-                        y1="192"
-                        x2="192"
-                        y2="192"
-                        stroke={isSelected || isHovered ? '#00d9ff' : '#1a4d66'}
-                        strokeWidth={isSelected || isHovered ? '2' : '1'}
-                        animate={{
-                          x2: comp.position.left === '15%' ? '96' : comp.position.left === '85%' ? '288' : comp.position.left === '20%' ? '96' : '288',
-                          y2: comp.position.top === '15%' ? '96' : comp.position.top === '50%' ? '192' : '288'
-                        }}
-                        transition={{ duration: 0.3 }}
-                        opacity={isSelected || isHovered ? 0.8 : 0.3}
-                      />
-                    </svg>
-
-                    {/* Component Node */}
+                  return (
                     <motion.div
+                      key={comp.id}
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                       animate={{
-                        scale: isSelected ? 1.1 : isHovered ? 1.05 : 1
+                        x: pos.x,
+                        y: pos.y,
+                        scale: isSelected ? 1.2 : isHovered ? 1.1 : 1,
+                        opacity: isExpanded ? 1 : 0
                       }}
-                      transition={{ duration: 0.3 }}
-                      className="relative w-20 h-20 rounded-lg border-2 flex items-center justify-center font-mono font-bold text-sm"
-                      style={{
-                        borderColor: comp.color,
-                        backgroundColor: `${comp.color}15`,
-                        boxShadow: isSelected || isHovered
-                          ? `0 0 30px ${comp.color}, 0 0 60px ${comp.color}80`
-                          : `0 0 15px ${comp.color}40`,
-                        color: comp.color
-                      } as React.CSSProperties}
+                      transition={{
+                        duration: 0.6,
+                        ease: 'easeOut'
+                      }}
                     >
-                      {/* Rotating border effect */}
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                        className="absolute inset-0 rounded-lg pointer-events-none"
-                        style={{
-                          borderWidth: '1px',
-                          borderStyle: 'solid',
-                          borderColor: `${comp.color}30`
-                        } as React.CSSProperties}
-                      />
+                      <motion.button
+                        onClick={() => setSelectedComponent(comp.id)}
+                        onMouseEnter={() => setHoveredComponent(comp.id)}
+                        onMouseLeave={() => setHoveredComponent(null)}
+                        className="relative w-24 h-24 cursor-pointer"
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {/* Glow effect */}
+                        <motion.div
+                          className="absolute inset-0 rounded-xl border-2"
+                          animate={{
+                            boxShadow: isSelected || isHovered
+                              ? `0 0 40px ${comp.color}, 0 0 80px ${comp.color}88`
+                              : `0 0 20px ${comp.color}40`,
+                            borderColor: isSelected || isHovered ? comp.color : `${comp.color}60`
+                          }}
+                          transition={{ duration: 0.3 }}
+                          style={{
+                            background: `${comp.color}08`
+                          } as React.CSSProperties}
+                        />
 
-                      {/* Component identifier */}
-                      <div className="relative z-10 text-center">
-                        <div className="text-xs uppercase tracking-widest">{comp.label.split(' ')[0]}</div>
-                      </div>
+                        {/* Rotating ring */}
+                        <motion.div
+                          className="absolute inset-0 rounded-xl border border-transparent"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                          style={{
+                            borderImage: `linear-gradient(45deg, ${comp.color}, transparent, ${comp.color}) 1`
+                          } as React.CSSProperties}
+                        />
+
+                        {/* Component label */}
+                        <div className="absolute inset-0 rounded-xl flex items-center justify-center">
+                          <div className="text-center z-10">
+                            <div
+                              className="text-xs font-mono font-bold uppercase tracking-widest"
+                              style={{ color: comp.color }}
+                            >
+                              {comp.label.split(' ')[0]}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.button>
                     </motion.div>
-
-                    {/* Label below */}
-                    <motion.p
-                      animate={{ opacity: isSelected || isHovered ? 1 : 0.6 }}
-                      className="absolute left-1/2 transform -translate-x-1/2 top-full mt-3 text-xs font-mono uppercase tracking-wider whitespace-nowrap"
-                      style={{ color: isSelected || isHovered ? comp.color : '#1a7a8a' } as React.CSSProperties}
-                    >
-                      {comp.label}
-                    </motion.p>
-                  </motion.div>
-                )
-              })}
+                  )
+                })}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -273,7 +354,7 @@ export default function ReflowPackExplodedView() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-gradient-to-br from-cyber-dark/60 to-cyber-darker/80 border border-cyber-blue/40 rounded-lg p-8 h-[650px] overflow-y-auto sticky top-20 space-y-8"
+              className="bg-gradient-to-br from-cyber-dark/60 to-cyber-darker/80 border border-cyber-blue/40 rounded-lg p-8 h-[700px] overflow-y-auto sticky top-20 space-y-8"
             >
               {selectedComponentData && (
                 <>
@@ -344,24 +425,44 @@ export default function ReflowPackExplodedView() {
           </div>
         </div>
 
-        {/* Component Selector Grid */}
-        <div className="grid grid-cols-3 gap-4 pt-8">
-          {components.map((comp) => (
-            <motion.button
-              key={comp.id}
-              onClick={() => setSelectedComponent(comp.id)}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`py-3 px-4 text-xs font-mono uppercase tracking-wider rounded-lg border-2 transition-all backdrop-blur-sm ${
-                selectedComponent === comp.id
-                  ? 'bg-cyber-blue/20 border-cyber-blue text-cyber-neon shadow-lg'
-                  : 'bg-transparent border-cyber-blue/30 text-cyber-blue/70 hover:border-cyber-blue/60 hover:text-cyber-blue'
-              }`}
+        {/* Hidden until expanded */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="grid grid-cols-3 gap-4 pt-8"
             >
-              {comp.label}
-            </motion.button>
-          ))}
-        </div>
+              {getPeripheralComponents().map((comp) => (
+                <motion.button
+                  key={comp.id}
+                  onClick={() => setSelectedComponent(comp.id)}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`py-3 px-4 text-xs font-mono uppercase tracking-wider rounded-lg border-2 transition-all backdrop-blur-sm ${
+                    selectedComponent === comp.id
+                      ? 'bg-cyber-blue/20 border-cyber-blue text-cyber-neon shadow-lg'
+                      : 'bg-transparent border-cyber-blue/30 text-cyber-blue/70 hover:border-cyber-blue/60 hover:text-cyber-blue'
+                  }`}
+                >
+                  {comp.label}
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Instructions */}
+        <motion.div
+          className="text-center pt-4"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          <p className="text-xs text-cyber-blue/60 font-mono">
+            {isExpanded ? '↓ CLICK ON COMPONENTS TO EXPLORE ↓' : 'CLICK THE BRAIN TO DISSECT ARCHITECTURE'}
+          </p>
+        </motion.div>
       </div>
     </div>
   )
