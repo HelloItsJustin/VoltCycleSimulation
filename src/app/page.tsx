@@ -35,10 +35,10 @@ export default function Home() {
         <nav className="border-b border-cyber-blue/20 bg-cyber-dark/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-6 py-4 flex gap-8">
             {[
-              { id: 'lifecycle', label: '⚙️ LIFECYCLE CINEMA' },
-              { id: 'hardware', label: '🔧 HARDWARE ARCH' },
-              { id: 'dashboard', label: '📊 COMMAND CENTER' },
-              { id: 'passport', label: '📋 BATTERY PASSPORT' },
+              { id: 'lifecycle', label: 'LIFECYCLE CINEMA' },
+              { id: 'hardware', label: 'HARDWARE ARCH' },
+              { id: 'dashboard', label: 'COMMAND CENTER' },
+              { id: 'passport', label: 'BATTERY PASSPORT' },
             ].map((item) => (
               <motion.button
                 key={item.id}
