@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type HardwareComponent = 'bms' | 'pcs' | 'cells' | 'hv' | 'thermal' | 'iot'
@@ -113,35 +113,44 @@ export default function ReflowPackExplodedView() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [selectedComponent, setSelectedComponent] = useState<HardwareComponent>('bms')
   const [hoveredComponent, setHoveredComponent] = useState<HardwareComponent | null>(null)
+  const [containerDims, setContainerDims] = useState({ width: 800, height: 700 })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Measure container and calculate optimal radius
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setContainerDims({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight
+        })
+      }
+    }
+
+    updateDimensions()
+    window.addEventListener('resize', updateDimensions)
+    return () => window.removeEventListener('resize', updateDimensions)
+  }, [])
+
+  // Calculate optimal radius based on container dimensions
+  const COMPONENT_SIZE = 128
+  const COMPONENT_HALF = COMPONENT_SIZE / 2
+  const BRAIN_SIZE = 128
+  const BRAIN_RADIUS = BRAIN_SIZE / 2
+  
+  const optimalRadius = Math.min(
+    (containerDims.width / 2) - BRAIN_RADIUS - COMPONENT_HALF - 20,  // width constraint with padding
+    (containerDims.height / 2) - BRAIN_RADIUS - COMPONENT_HALF - 20   // height constraint with padding
+  )
 
   const getPeripheralComponents = () => components.filter(c => c.id !== 'bms')
   const selectedComponentData = components.find(c => c.id === selectedComponent)
 
-  const calculatePosition = (angle: number, radius: number, expand: boolean) => {
-    const actualRadius = expand ? radius : 0
-    const radians = (angle * Math.PI) / 180
-    const x = Math.cos(radians) * actualRadius
-    const y = Math.sin(radians) * actualRadius
-    return { x, y }
-  }
-
-  const getComponentPixelPosition = (angle: number, radius: number, expand: boolean, canvasWidth: number, canvasHeight: number) => {
-    const pos = calculatePosition(angle, radius, expand)
-    const centerX = canvasWidth / 2
-    const centerY = canvasHeight / 2
-    return {
-      x: centerX + pos.x,
-      y: centerY + pos.y
-    }
-  }
-
   // Get connection point from edge of brain box (brain is 128px = 64px from center)
-  const BRAIN_SIZE = 128
-  const BRAIN_RADIUS = BRAIN_SIZE / 2
   
-  const getConnectionPoint = (angle: number, expand: boolean, canvasWidth: number, canvasHeight: number, fromBrain: boolean = true) => {
-    const centerX = canvasWidth / 2
-    const centerY = canvasHeight / 2
+  const getConnectionPoint = (angle: number, expand: boolean, fromBrain: boolean = true) => {
+    const centerX = containerDims.width / 2
+    const centerY = containerDims.height / 2
     
     if (!expand || !fromBrain) {
       return { x: centerX, y: centerY }
@@ -155,6 +164,24 @@ export default function ReflowPackExplodedView() {
     return {
       x: centerX + edgeOffsetX,
       y: centerY + edgeOffsetY
+    }
+  }
+
+  const calculatePosition = (angle: number, radius: number, expand: boolean) => {
+    const actualRadius = expand ? radius : 0
+    const radians = (angle * Math.PI) / 180
+    const x = Math.cos(radians) * actualRadius
+    const y = Math.sin(radians) * actualRadius
+    return { x, y }
+  }
+
+  const getComponentPixelPosition = (angle: number, radius: number, expand: boolean) => {
+    const pos = calculatePosition(angle, radius, expand)
+    const centerX = containerDims.width / 2
+    const centerY = containerDims.height / 2
+    return {
+      x: centerX + pos.x,
+      y: centerY + pos.y
     }
   }
 
@@ -174,7 +201,7 @@ export default function ReflowPackExplodedView() {
         <div className="grid grid-cols-3 gap-8">
           {/* Main Visualization */}
           <div className="col-span-2">
-            <div className="relative w-full h-[700px] bg-gradient-to-br from-cyber-dark/70 to-cyber-darker border border-cyber-blue/20 rounded-lg overflow-hidden">
+            <div ref={containerRef} className="relative w-full h-[700px] bg-gradient-to-br from-cyber-dark/70 to-cyber-darker border border-cyber-blue/20 rounded-lg overflow-hidden">
               {/* Animated grid background */}
               <div className="absolute inset-0 opacity-[0.02]">
                 <div className="w-full h-full" style={{
@@ -269,8 +296,8 @@ export default function ReflowPackExplodedView() {
                 {/* Connecting lines from brain edge to peripherals */}
                 <AnimatePresence>
                   {isExpanded && getPeripheralComponents().map((comp) => {
-                    const startPos = getConnectionPoint(comp.angle, true, 800, 700, true) // Brain EDGE
-                    const endPos = getComponentPixelPosition(comp.angle, comp.radius, true, 800, 700) // Component center
+                    const startPos = getConnectionPoint(comp.angle, true, true) // Brain EDGE
+                    const endPos = getComponentPixelPosition(comp.angle, optimalRadius, true) // Component center
                     
                     return (
                       <line
@@ -294,7 +321,7 @@ export default function ReflowPackExplodedView() {
                 {getPeripheralComponents().map((comp) => {
                   const isSelected = selectedComponent === comp.id
                   const isHovered = hoveredComponent === comp.id
-                  const pixelPos = getComponentPixelPosition(comp.angle, comp.radius, isExpanded, 800, 700)
+                  const pixelPos = getComponentPixelPosition(comp.angle, optimalRadius, isExpanded)
 
                   return (
                     <motion.div
