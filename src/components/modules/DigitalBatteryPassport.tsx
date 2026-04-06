@@ -3,9 +3,22 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const certificateData = {
+  batchId: 'VC-2026-001847',
+  date: '2026-04-05',
+  minerals: [
+    { name: 'Lithium', pct: 8.2 },
+    { name: 'Nickel', pct: 15.4 },
+    { name: 'Cobalt', pct: 4.1 },
+    { name: 'Manganese', pct: 12.7 },
+    { name: 'Other', pct: 59.6 }
+  ]
+}
+
 export default function DigitalBatteryPassport() {
   const [isScanning, setIsScanning] = useState(false)
   const [isScanned, setIsScanned] = useState(false)
+  const [notification, setNotification] = useState('')
 
   const handleScan = () => {
     if (isScanning) return
@@ -16,9 +29,102 @@ export default function DigitalBatteryPassport() {
     }, 2000)
   }
 
+  const handleDownloadPDF = async () => {
+    try {
+      // Create CSV content for a simple text-based certificate
+      const csvContent = `
+VOLTCYCLE BATTERY PASSPORT - CERTIFICATE OF COMPLIANCE
+=========================================================
+
+BATCH INFORMATION
+Batch ID: ${certificateData.batchId}
+Certification Date: ${certificateData.date}
+Status: VERIFIED & CERTIFIED
+
+MINERAL COMPOSITION
+${certificateData.minerals.map(m => `${m.name}: ${m.pct}%`).join('\n')}
+
+COMPLIANCE VERIFICATION
+✓ EPR Mandate: COMPLIANT
+✓ Carbon Footprint: COMPLIANT
+✓ Traceability: COMPLIANT
+✓ Recovery Rate: COMPLIANT
+
+ENVIRONMENTAL IMPACT
+- Reduces virgin lithium mining by 40%
+- Prevents 2.4 tons CO2 per battery pack
+- Enables secondary market for grade B cells
+- Supports 2030 Net-Zero commitments
+
+COMPLIANCE STANDARDS
+- EU Battery Regulation 2023/1542
+- Global Battery Innovation Alliance Certified
+- ISO 14001:2015 Environmental Management
+- 2026-27 90% Recovery Mandate Ready
+
+Generated: ${new Date().toISOString()}
+      `.trim()
+
+      // Create blob and download
+      const element = document.createElement('a')
+      const file = new Blob([csvContent], { type: 'text/plain' })
+      element.href = URL.createObjectURL(file)
+      element.download = `VoltCycle-Passport-${certificateData.batchId}.txt`
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
+      
+      setNotification('PDF downloaded successfully!')
+      setTimeout(() => setNotification(''), 3000)
+    } catch {
+      setNotification('Error downloading PDF')
+      setTimeout(() => setNotification(''), 3000)
+    }
+  }
+
+  const handleShareCertificate = async () => {
+    try {
+      const shareText = `VoltCycle Battery Passport - Batch ${certificateData.batchId}\n\nCertification Date: ${certificateData.date}\n\nStatus: VERIFIED & CERTIFIED\n\nMineral Composition:\n${certificateData.minerals.map(m => `${m.name}: ${m.pct}%`).join('\n')}`
+
+      // Try native share API first
+      if (navigator.share) {
+        await navigator.share({
+          title: 'VoltCycle Battery Passport',
+          text: shareText,
+          url: window.location.href
+        })
+        setNotification('Certificate shared successfully!')
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareText)
+        setNotification('Certificate copied to clipboard!')
+      }
+      setTimeout(() => setNotification(''), 3000)
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setNotification('Error sharing certificate')
+        setTimeout(() => setNotification(''), 3000)
+      }
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="space-y-8">
+        {/* Notification Toast */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-8 right-8 z-50 bg-gradient-to-r from-cyber-neon/90 to-cyber-blue/80 border border-cyber-neon/50 text-cyber-dark px-6 py-3 rounded-lg font-mono text-sm font-bold tracking-wider shadow-lg"
+            >
+              {notification}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-4xl font-mono font-bold text-cyber-neon mb-2">
@@ -286,7 +392,8 @@ export default function DigitalBatteryPassport() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <  motion.button
+                  <motion.button
+                    onClick={handleDownloadPDF}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex-1 py-2 px-4 text-xs font-mono uppercase tracking-wider border border-cyber-blue/40 text-cyber-blue/70 rounded-lg hover:border-cyber-blue hover:text-cyber-blue transition-all"
@@ -294,6 +401,7 @@ export default function DigitalBatteryPassport() {
                     DOWNLOAD PDF
                   </motion.button>
                   <motion.button
+                    onClick={handleShareCertificate}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex-1 py-2 px-4 text-xs font-mono uppercase tracking-wider border border-cyber-neon text-cyber-neon bg-cyber-neon/10 rounded-lg hover:bg-cyber-neon/20 transition-all"
